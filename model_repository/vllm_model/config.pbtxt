@@ -1,0 +1,9 @@
+backend: "vllm"
+max_batch_size: 0  # Changed from 64 to 0 as required by vLLM backend
+ 
+instance_group [
+  {
+    count: 1
+    kind: KIND_MODEL
+  }
+]
