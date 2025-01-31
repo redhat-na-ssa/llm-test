@@ -1,0 +1,2 @@
+import duckdb
+duckdb.sql("COPY(SELECT regexp_replace(system_prompt,'\\n','','g') AS system, regexp_replace(question,'\\n','','g') AS user FROM './3_5M-GPT3_5-Augmented.parquet' LIMIT 1000) TO './orca-1000.csv' (FORMAT CSV, HEADER)")
