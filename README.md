@@ -7,7 +7,25 @@ pipenv install duckdb
 python3 convert_openorca
 ```
 
-### Triton
+### Triton on RHEL
+
+Install nvidia container toolkit [link](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf)
+Configure [CDI](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html#generating-a-cdi-specification)
+
+Substitute the hugging face token
+
+```
+podman run -e HF_TOKEN='' --security-opt=label=disable --device nvidia.com/gpu=all -it --net=host --rm -p 8001:8001 --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 -v ${PWD}:/work -w /work nvcr.io/nvidia/tritonserver:24.12-vllm-python-py3 tritonserver --model-repository ./model_repository
+```
+
+Smoke test
+
+```
+curl -X POST <url>/v2/models/vllm_model/generate -d '{"text_input": "What is Triton Inference Server?", "parameters": {"stream": false, "temperature": 0}}'
+```
+
+
+### Triton on OCP
 
 #### create and configure GPU machineset
 `git clone https://github.com/redhat-na-ssa/hobbyist-guide-to-rhoai.git`
@@ -24,7 +42,7 @@ oc expose deploy triton-instruct-llama
 oc expose svc triton-instruct-llama 
 ```
 
-#### test
+### Testing (for both RHEL and OCP)
 ```
 pipenv install locust
 python3 single_question.py  # make sure single prompt response is coherent
