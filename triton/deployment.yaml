@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-instruct-llama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton-instruct-llama
+  template:
+    metadata:
+      labels:
+        app: triton-instruct-llama
+    spec:
+      volumes:
+        - name: configpb
+          configMap:
+            name: configpb
+        - name: modelfile
+          configMap:
+            name: modelfile
+        - name: cache-memory
+          emptyDir:
+            medium: Memory
+            sizeLimit: 24Gi
+        - name: shared-memory
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+      containers:
+        - resources:
+            limits:
+              cpu: '16'
+              memory: 64Gi
+              nvidia.com/gpu: '4'
+            requests:
+              cpu: '8'
+              memory: 32Gi
+              nvidia.com/gpu: '4'
+          name: triton-instruct-llama
+          command:
+            - /bin/sh
+            - '-c'
+          env:
+            - name: HF_HOME
+              value: /mnt/model-cache
+            - name: NUMBA_CACHE_DIR
+              value: /mnt/model-cache
+            - name: OUTLINES_CACHE_DIR
+              value: /mnt/model-cache            
+            - name: HF_TOKEN
+              value: ''
+          ports:
+            - name: instr-http
+              containerPort: 8000
+              protocol: TCP
+            - name: instr-grpc
+              containerPort: 8001
+              protocol: TCP
+            - name: instr-metrics
+              containerPort: 8002
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: configpb
+              mountPath: /mnt/model-repo/vllm_model
+            - name: modelfile
+              mountPath: /mnt/model-repo/vllm_model/1
+            - name: cache-memory
+              mountPath: /mnt/model-cache
+            - name: shared-memory
+              mountPath: /dev/shm
+          image: 'nvcr.io/nvidia/tritonserver:24.12-vllm-python-py3'
+          args:
+            - tritonserver --model-repo=/mnt/model-repo

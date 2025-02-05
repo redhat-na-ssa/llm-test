@@ -30,6 +30,5 @@ def post(url):
         print(f"POST request failed with status code: {response.status_code}")
     
 if __name__ == "__main__":
-    url = ""  # Replace with your API endpoint
+    url = "<url>/v2/models/vllm_model/generate"  # Replace <url> with your API endpoint
     post(url)
-
